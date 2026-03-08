@@ -1,8 +1,8 @@
 package com.example.winebble
 
-import android.R.attr.onClick
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material3.ButtonDefaults.shape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -21,8 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -30,12 +26,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.winebble.Wine
 import com.example.winebble.components.ItemList
+import com.example.winebble.getAllWine
 import com.example.winebble.ui.theme.WinebbleTheme
+
 
 /**
  * Project: Winebble
@@ -67,8 +65,10 @@ var selectedIndex by remember { mutableIntStateOf(1) }
 Column (modifier = modifier
     .fillMaxSize()
     .background(colorResource(R.color.principal))
-    .padding(dimensionResource(R.dimen.common_padding_default))) {
-    Box(Modifier.fillMaxWidth(),
+    .padding(dimensionResource(R.dimen.common_padding_default)),
+    verticalArrangement = Arrangement.Top) {
+    Box(Modifier
+        .fillMaxWidth(),
         contentAlignment = Alignment.Center) {
         SingleChoiceSegmentedButtonRow (Modifier
             .padding(vertical = dimensionResource(R.dimen.common_padding_min))
@@ -102,7 +102,9 @@ Column (modifier = modifier
                         secondaryText = wine.description,
                         imgUrl = wine.imgUrl,
                         icon = Icons.Default.AddShoppingCart,
-                        showDivider = true
+                        overlineText = wine.origin,
+                        showDivider = true,
+                        price = wine.price
                     )
                 }
             }

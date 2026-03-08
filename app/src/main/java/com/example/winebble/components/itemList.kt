@@ -4,8 +4,12 @@ package com.example.winebble.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +20,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -31,8 +36,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.winebble.R
 import com.example.winebble.ui.theme.WinebbleTheme
+
 
 
 
@@ -68,13 +77,14 @@ fun ItemList(modifier: Modifier = Modifier,
                      imgUrl: String = "",
                      icon: ImageVector? = null,
                      overlineText: String = "",
-                     showDivider: Boolean = false){
+                     showDivider: Boolean = false,
+                     price: Double = 0.0){
 
     Column  {
         val imageShape = RoundedCornerShape(16.dp)
-        val borderShape = RoundedCornerShape((-16).dp)
 
-        ListItem(modifier = Modifier,
+        ListItem(modifier = modifier
+            .fillMaxWidth(),
             colors = ListItemDefaults.colors(
                 containerColor = Color.Transparent
             ),
@@ -89,33 +99,55 @@ fun ItemList(modifier: Modifier = Modifier,
             },
             supportingContent ={
                 Text(secondaryText,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 3,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 5,
                     overflow = TextOverflow.Ellipsis,
                     color = Color.White)
             },
             leadingContent = {
-                GlideImage(//<------en rojo
-                    model = imgUrl,
-                    contentDescription = "Image_url",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(imageShape)
-                        .border( width = 2.dp,
-                            color = colorResource(R.color.gold))
-                ) { glide ->//<------en rojo
-                    glide.diskCacheStrategy(DiskCacheStrategy.ALL) //<------en rojo
+                Column(horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(top = 8.dp)) {
 
+                    GlideImage(
+                        model = imgUrl,
+                        contentDescription = "Image_url",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(imageShape)
+                            .border(
+                                width = 2.dp,
+                                color = colorResource(R.color.gold),
+                                shape = imageShape
+                            )
+                    ) { glide ->
+                        glide.diskCacheStrategy(DiskCacheStrategy.ALL)
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+
+                    Text(
+                        text = "€${"%.2f".format(price)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             },
             trailingContent = {
                 icon?.let {
-                    Icon(icon, contentDescription = "Icon_image")
+                    Icon(icon, contentDescription = "Icon_image", tint = Color.White)
+
                 }
             },
             overlineContent ={
-                if(overlineText.isNotEmpty()) Text(overlineText)
+                if(overlineText.isNotEmpty())
+                Text(
+                    overlineText,
+                    color = colorResource(R.color.gold),
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
         )
     }

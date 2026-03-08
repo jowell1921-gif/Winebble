@@ -10,5 +10,6 @@ package com.example.winebble
 data class Wine ( val name: String,
                   val description: String,
                   val imgUrl: String,
-                  val createBye: String)
+                  val origin: String,
+                  val price: Double)
 
