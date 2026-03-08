@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Winebble</string>
+    <string name="wines_list">Vinos</string>
+    <string name="licor_list">Destilados</string>
+</resources>
