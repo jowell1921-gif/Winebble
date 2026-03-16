@@ -1,11 +1,14 @@
 package com.example.winebble.components
 
 
+import android.R.attr.text
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,32 +22,27 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.example.winebble.R
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.example.winebble.R
 import com.example.winebble.ui.theme.WinebbleTheme
-
-
-
-
+import coil.compose.AsyncImage
+import com.example.winebble.ui.theme.Typography
 
 
 /**
@@ -54,6 +52,17 @@ import com.example.winebble.ui.theme.WinebbleTheme
  * On: 06/03/2026 at 11: 38
  * All rights reserved 2026.
  */
+
+@Preview(showBackground = true)
+@Composable
+private fun BasicPreview(){
+    WinebbleTheme {
+        ProfileList(
+            text = "Algún texto",
+            icon = painterResource(R.drawable.icon_person),
+            modifier = Modifier)
+    }
+}
 
 @Composable
 @Preview(showBackground = true)
@@ -69,7 +78,29 @@ fun AdvancePreview() {
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
+@Composable
+fun ProfileList(text: String,
+                icon: Painter,
+                modifier: Modifier = Modifier) {
+    Column {
+        Row(modifier = Modifier.fillMaxWidth()
+            .padding(dimensionResource(R.dimen.common_padding_default)),
+            verticalAlignment = Alignment.CenterVertically) {
+            Image(painter = icon,
+                contentDescription = text,
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(end = 16.dp))
+            Text(text, Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(R.dimen.common_padding_default)),
+                style = Typography.bodyLarge
+            )
+        }
+        HorizontalDivider()
+    }
+}
+
 @Composable
 fun ItemList(modifier: Modifier = Modifier,
                      mainText: String,
@@ -105,10 +136,12 @@ fun ItemList(modifier: Modifier = Modifier,
                     color = Color.White)
             },
             leadingContent = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(top = 8.dp)) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
 
-                    GlideImage(
+                    AsyncImage(
                         model = imgUrl,
                         contentDescription = "Image_url",
                         contentScale = ContentScale.Crop,
@@ -120,12 +153,9 @@ fun ItemList(modifier: Modifier = Modifier,
                                 color = colorResource(R.color.gold),
                                 shape = imageShape
                             )
-                    ) { glide ->
-                        glide.diskCacheStrategy(DiskCacheStrategy.ALL)
-                    }
+                    )
 
                     Spacer(modifier = Modifier.height(24.dp))
-
 
                     Text(
                         text = "€${"%.2f".format(price)}",
@@ -154,3 +184,4 @@ fun ItemList(modifier: Modifier = Modifier,
 
     if(showDivider) HorizontalDivider()
 }
+

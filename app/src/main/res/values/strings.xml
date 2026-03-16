@@ -2,4 +2,6 @@
     <string name="app_name">Winebble</string>
     <string name="wines_list">Vinos</string>
     <string name="licor_list">Destilados</string>
+    <string name="main_profile">Mi perfil</string>
+    <string name="user_name">Joel Osorio</string>
 </resources>

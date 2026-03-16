@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.winebble.Views.FavoritesScreen
+import com.example.winebble.Views.Profile
 import com.example.winebble.Views.ProfileScreen
 import com.example.winebble.Views.SearchScreen
 import com.example.winebble.ui.theme.WinebbleTheme
@@ -81,7 +82,7 @@ fun ContentMain() {
                     onSelectedItem  = { wine -> }
                 )
                 2 -> FavoritesScreen()
-                3 -> ProfileScreen()
+                3 -> Profile()
             }
         }
     }

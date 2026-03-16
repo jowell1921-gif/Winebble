@@ -11,6 +11,13 @@ import androidx.compose.runtime.Composable
  */
 
 @Composable
+fun getProfileItems(): List<Pair<String, Int>> = listOf(
+    "Cuenta" to R.drawable.icon_person,
+    "Historial de pedidos" to R.drawable.orders_icon,
+    "Codigos promocionales" to R.drawable.code_icon,
+    "Notificaciones" to R.drawable.notifications_icon,
+    "Preguntas frecuentes" to R.drawable.question_icon,
+    "Cerrar sesión" to R.drawable.logout_icon)
 fun getAllWine() = listOf(
     Wine("Banyuls Traditionnel 1949, L'Etoile",
         "Nacido en las escarpadas laderas de esquisto con vistas al Mediterráneo, es fruto del trabajo heroico de los viticultores de la Cave de l'Étoile, una finca pionera fundada en 1921. Una auténtica pieza de coleccionista, esta botella encarna la historia viva del Rosellón y la nobleza atemporal de los vinos dulces naturales añejos.",
