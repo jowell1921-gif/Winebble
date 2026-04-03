@@ -7,11 +7,25 @@
     <dimen name="common_padding_min">8dp</dimen>
     <dimen name="common_padding_list_item_vertical">12dp</dimen>
     <dimen name="common_padding_default">16dp</dimen>
+    <dimen name="common_padding_long">16dp</dimen>
+    <dimen name="common_padding_xl">18dp</dimen>
     <dimen name="common_padding_little">20dp</dimen>
     <dimen name="common_padding_middle">24dp</dimen>
-    <dimen name="common_padding_X_large">32dp</dimen>
+    <dimen name="common_padding_middle_large">28dp</dimen>
+    <dimen name="common_padding_XX_large">32dp</dimen>
+    <dimen name="common_padding_size_long">62dp</dimen>
     <dimen name="item_lis_img_size">72dp</dimen>
     <dimen name="img_size">88dp</dimen>
     <dimen name="img_conver_height">160dp</dimen>
     <dimen name="rb_row_height">56dp</dimen>
+    <!-- Ejemplo de nombre normalizado: item_card + text + horizontal_padding = padding horizontal del bloque de texto de la card -->
+    <dimen name="item_card_corner_radius">28dp</dimen>
+    <dimen name="item_card_elevation">8dp</dimen>
+    <dimen name="item_card_logo_size">62dp</dimen>
+    <dimen name="item_card_favorite_icon_size">28dp</dimen>
+    <dimen name="item_card_text_horizontal_padding">12dp</dimen>
+    <dimen name="item_card_text_vertical_padding">8dp</dimen>
+    <dimen name="item_card_rating_badge_spacing">6dp</dimen>
+    <dimen name="item_card_rating_icon_size">18dp</dimen>
+    <dimen name="item_card_logo_border_width">2dp</dimen>
 </resources>

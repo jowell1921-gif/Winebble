@@ -4,4 +4,23 @@
     <string name="licor_list">Destilados</string>
     <string name="main_profile">Mi perfil</string>
     <string name="user_name">Joel Osorio</string>
+    <string name="sub_title">Vinoteca</string>
+    <string name="valoration_number">3,5</string>
+    <string name="main_name">Winebble</string>
+    <string name="empty_favorite">Todavia no tienes un favorito</string>
+    <string name="remove_favorites">Has quitado este sitio de favoritos</string>
+    <string name="add_favorites">Has añadido este sitio a favoritos</string>
+    <string name="not_create_user">No se pudo crer usuario</string>
+    <string name="login_sesion">Iniciar sesión</string>
+    <string name="email">Email</string>
+    <string name="password">Contraseña</string>
+    <string name="new_register">Registrate aquí</string>
+    <string name="load_user">Cargando...</string>
+    <string name="enter_user">Entrar</string>
+    <string name="create_user">Crear cuenta</string>
+    <string name="name_user">Nombre</string>
+    <string name="register_user">Registrarse</string>
+    <string name="answer_account">¿Ya tienes cuenta?</string>
+    <string name="not_account">¿No tienes cuenta?</string>
+    <string name="letters_app">logo letras</string>
 </resources>

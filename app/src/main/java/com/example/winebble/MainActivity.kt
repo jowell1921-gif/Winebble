@@ -13,9 +13,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,12 +29,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.winebble.Views.FavoritesScreen
 import com.example.winebble.Views.Profile
-import com.example.winebble.Views.ProfileScreen
-import com.example.winebble.Views.SearchScreen
+import com.example.winebble.Views.Search
+import com.example.winebble.Views.UserLogin
 import com.example.winebble.ui.theme.WinebbleTheme
-
+import com.example.winebble.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,50 +51,98 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ContentMain() {
-    // --- CONTEXTO Y RECURSOS ---
-    // Obtenemos el contexto para acceder a recursos como colores
     val context = LocalContext.current
-    val colorBar = context.getColor(R.color.gold)
+    val authViewModel: AuthViewModel = viewModel()
+    val snackbarHostState = remember { SnackbarHostState() } // CAMBIO: CENTRALIZA LOS MENSAJES DE LOGIN, REGISTRO Y LOGOUT.
 
-    // --- ESTADO DE LA APLICACIÓN ---
-    // selectedItem: Controla qué item de la barra inferior está seleccionado
-    var selectedItem by remember { mutableStateOf(1) }
+    var selectedItem by remember { mutableStateOf(1) } // CAMBIO: CONTROLA LA PESTAÑA SELECCIONADA DE LA BARRA INFERIOR.
+    var logoutMessage by remember { mutableStateOf<String?>(null) } // CAMBIO: GUARDA EL MENSAJE TEMPORAL DE CIERRE DE SESION.
 
+    val favoriteSearch = remember { mutableStateListOf<SearchCard>() } // CAMBIO: MANTIENE LOS FAVORITOS DE SEARCH COMPARTIDOS EN TODA LA APP.
+    val onToggleFavorite: (SearchCard) -> Unit = { card -> // CAMBIO: CENTRALIZA EN EL PADRE EL ALTA Y BAJA DE FAVORITOS.
+        val existingCard = favoriteSearch.firstOrNull { it.name == card.name }
+        if (existingCard != null) {
+            favoriteSearch.remove(existingCard)
+        } else {
+            favoriteSearch.add(card)
+        }
+    }
 
-    // --- ESTRUCTURA PRINCIPAL (SCAFFOLD) ---
-    // Scaffold proporciona la estructura básica de Material Design
+    LaunchedEffect(authViewModel.user, authViewModel.successMessage, logoutMessage) { // CAMBIO: MUESTRA SNACKBARS CUANDO CAMBIAN LOS EVENTOS DE AUTH.
+        when {
+            logoutMessage != null -> {
+                snackbarHostState.showSnackbar(logoutMessage!!)
+                logoutMessage = null
+            }
+
+            authViewModel.user != null && authViewModel.successMessage != null -> {
+                snackbarHostState.showSnackbar(authViewModel.successMessage!!)
+                authViewModel.clearSuccessMessage()
+            }
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = Color(context.getColor(R.color.principal)),
-        // --- BARRA INFERIOR ---
-        // Se pasa el estado y el callback para manejar selecciones
+        containerColor = if (authViewModel.user == null || selectedItem == 0) {
+            Color.White
+        } else {
+            Color(context.getColor(R.color.principal))
+        }, // CAMBIO: MANTIENE FONDO BLANCO EN LOGIN Y SEARCH, Y EL PRINCIPAL EN EL RESTO.
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) // CAMBIO: HOST GLOBAL PARA LOS MENSAJES DE AUTENTICACION.
+        },
         bottomBar = {
-            MyBottomBar(
-                selectedItem = selectedItem,
-                onItemSelected = { selectedItem = it }
-            )
-        }
-        // --- CONTENIDO PRINCIPAL ---
-    ) { paddingValues ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)) {
-            when(selectedItem) {
-                0 -> SearchScreen()
-                1 -> MainScreen(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    onSelectedItem  = { wine -> }
+            if (authViewModel.user != null) { // CAMBIO: SOLO MUESTRA LA BARRA INFERIOR CUANDO EL USUARIO YA ESTA DENTRO DE LA APP.
+                MyBottomBar(
+                    selectedItem = selectedItem,
+                    onItemSelected = { selectedItem = it }
                 )
-                2 -> FavoritesScreen()
-                3 -> Profile()
+            }
+        }
+    ) { paddingValues ->
+        if (authViewModel.user == null) {
+            UserLogin(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues), // CAMBIO: MANTIENE EL LOGIN DENTRO DEL MISMO SCAFFOLD PARA COMPARTIR SNACKBARS.
+                authViewModel = authViewModel
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                when (selectedItem) {
+                    0 -> Search(
+                        favorites = favoriteSearch, // CAMBIO: PASA LA LISTA DE FAVORITOS A SEARCH.
+                        onToggleFavorite = onToggleFavorite // CAMBIO: PASA LA ACCION DE FAVORITOS A SEARCH.
+                    )
+
+                    1 -> MainScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onSelectedItem = { },
+                        onSelectedItemTwo = { }
+                    )
+
+                    2 -> FavoritesScreen(
+                        favorites = favoriteSearch, // CAMBIO: PASA LOS FAVORITOS A FAVORITESSCREEN.
+                        onToggleFavorite = onToggleFavorite // CAMBIO: PERMITE QUITAR FAVORITOS TAMBIEN DESDE FAVORITESSCREEN.
+                    )
+
+                    3 -> Profile(
+                        onLogout = {
+                            logoutMessage = "Has cerrado sesión correctamente" // CAMBIO: PREPARA EL MENSAJE DE LOGOUT ANTES DE CERRAR SESION.
+                            authViewModel.logout() // CAMBIO: CIERRA SESION Y DEVUELVE AL LOGIN.
+                        }
+                    )
+                }
             }
         }
     }
 }
 
-
-// --- SEALD CLASS PARA LAS PANTALLAS DE LA BARRA INFERIOR ---
 sealed class BottomBarScreen(val route: String, val icon: Int, val title: String) {
     object Search : BottomBarScreen("Search", R.drawable.icon_search, "Búsqueda")
     object Home : BottomBarScreen("Home", R.drawable.baseline_home_24, "Inicio")
@@ -97,16 +150,11 @@ sealed class BottomBarScreen(val route: String, val icon: Int, val title: String
     object Profile : BottomBarScreen("Search", R.drawable.icon_person, "Perfil")
 }
 
-
-// --- BARRA DE NAVEGACIÓN  ---
 @Composable
 fun MyBottomBar(
-    // --- PARÁMETROS DE ENTRADA (STATE HOISTING) ---
     selectedItem: Int?,
     onItemSelected: (Int) -> Unit
 ) {
-    // --- CONFIGURACIÓN DE ITEMS ---
-    // Lista que define los elementos de la barra de navegación
     val items = listOf(
         BottomNavItem(R.drawable.icon_search, "Búsqueda"),
         BottomNavItem(R.drawable.baseline_home_24, "Inicio"),
@@ -115,31 +163,22 @@ fun MyBottomBar(
     )
 
     val context = LocalContext.current
-    // NavigationBar es el contenedor de la barra inferior
+
     NavigationBar(
         containerColor = Color(context.getColor(R.color.second))
     ) {
-        // --- GENERACIÓN DINÁMICA DE ITEMS ---
-        // Iteramos sobre la lista para crear cada NavigationBarItem
         items.forEachIndexed { index, item ->
-            // --- ITEM DE NAVEGACIÓN INDIVIDUAL ---
             NavigationBarItem(
-                // ¿Este item está seleccionado?
                 selected = selectedItem == index,
-                // Acción al hacer clic: notificamos al padre el índice seleccionado
                 onClick = { onItemSelected(index) },
-
-                // --- ICONO DEL ITEM ---
                 icon = {
                     Icon(
                         painter = painterResource(item.icon),
                         contentDescription = item.title,
                         modifier = Modifier.size(30.dp),
-                        // Color: dorado si está seleccionado, blanco si no
                         tint = if (selectedItem == index) Color.Black else Color.White
                     )
                 },
-                // --- TEXTO DEL ITEM (OPCIONAL) ---
                 label = {
                     Text(
                         text = item.title,
@@ -151,9 +190,7 @@ fun MyBottomBar(
     }
 }
 
-//MODELO DE DATOS
 data class BottomNavItem(@DrawableRes val icon: Int, val title: String)
-
 
 @Preview(showBackground = true)
 @Composable

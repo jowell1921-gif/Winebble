@@ -2,9 +2,7 @@ package com.example.winebble
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,7 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
-import com.example.winebble.R
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -30,9 +28,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.winebble.Wine
 import com.example.winebble.components.ItemList
-import com.example.winebble.getAllWine
 import com.example.winebble.ui.theme.WinebbleTheme
 
 
@@ -48,68 +44,89 @@ import com.example.winebble.ui.theme.WinebbleTheme
 @Composable
 fun MainPreview()  {
     WinebbleTheme {
-        MainScreen(Modifier.padding(16.dp)) {}
+        MainScreen(Modifier.padding(16.dp),
+            onSelectedItem = {}, onSelectedItemTwo = {})
     }
 }
 
 @Composable
-fun MainScreen ( modifier: Modifier, onSelectedItem: (Wine) -> Unit) {
-    val wines =  getAllWine()
+fun MainScreen ( modifier: Modifier,
+                 onSelectedItem: (WineData) -> Unit,
+                 onSelectedItemTwo: (LicorData) -> Unit) {
+    val wines = getAllWine()
+    val licors = getAllLicor()
 
-val buttons =listOf(
-    stringResource((R.string.licor_list)),
-    stringResource((R.string.wines_list))
-)
+    val buttons = listOf(
+        stringResource((R.string.licor_list)),
+        stringResource((R.string.wines_list))
+    )
 
-var selectedIndex by remember { mutableIntStateOf(1) }
+    var selectedIndex by remember { mutableIntStateOf(1) }
 
-Column (modifier = modifier
-    .fillMaxSize()
-    .background(colorResource(R.color.principal))
-    .padding(dimensionResource(R.dimen.common_padding_default)),
-    verticalArrangement = Arrangement.Top) {
-    Box(Modifier
-        .fillMaxWidth(),
-        contentAlignment = Alignment.Center) {
-        SingleChoiceSegmentedButtonRow (Modifier
-            .padding(vertical = dimensionResource(R.dimen.common_padding_min))
-        ) {
-            buttons.forEachIndexed { index, label ->
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults
-                        .itemShape( index = index,
-                            count = buttons.size
-                        ),
-                            onClick = { selectedIndex = index },
-                                    selected = index == selectedIndex,
-                    colors = SegmentedButtonDefaults.colors(
-                        activeContainerColor = colorResource(R.color.gold),
-                        inactiveContainerColor = Color.White
-                    ) ,
-                        label = {
-                            Text(label) }
+    Scaffold( // Separa la cabecera del contenido para dejar el selector arriba y la lista debajo sin usar weight.
+        modifier = modifier
+            .fillMaxSize()
+            .background(colorResource(R.color.principal)),
+        containerColor = colorResource(R.color.principal), // Mantiene el fondo principal en toda la pantalla.
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.common_padding_default)), // Da margen al selector superior.
+                contentAlignment = Alignment.Center
+            ) {
+                SingleChoiceSegmentedButtonRow(
+                    Modifier.padding(vertical = dimensionResource(R.dimen.common_padding_min)) // Conserva el espaciado vertical del selector.
+                ) {
+                    buttons.forEachIndexed { index, label ->
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = buttons.size
+                            ),
+                            onClick = { selectedIndex = index }, // Cambia entre Destilados y Vinos.
+                            selected = index == selectedIndex,
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = colorResource(R.color.gold),
+                                inactiveContainerColor = Color.White
+                            ),
+                            label = { Text(label) }
                         )
                     }
                 }
             }
-
-        if (selectedIndex == 1) {
-            LazyColumn(modifier = Modifier
-                .weight(1f)) {
-                items(wines.size) { index ->
-                    val wine = wines[index]
-                    ItemList (modifier = Modifier.clickable{ onSelectedItem(wine)},
-                        mainText = wine.name,
-                        secondaryText = wine.description,
-                        imgUrl = wine.imgUrl,
-                        icon = Icons.Default.AddShoppingCart,
-                        overlineText = wine.origin,
-                        showDivider = true,
-                        price = wine.price
-                    )
-                }
+        }
+) { innerPadding ->
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(), // Mantiene una unica lista ocupando toda la zona de contenido.
+        contentPadding = innerPadding // Coloca la lista por debajo del topBar del Scaffold.
+    ) {
+        when (selectedIndex) {
+            0 -> items(licors) { licor -> // Cuando se pulsa Destilados, pinta los elementos de getAllLicor().
+                ItemList(
+                    modifier = Modifier.clickable { onSelectedItemTwo(licor) }, // Llama al callback correcto de destilados.
+                    mainText = licor.name,
+                    secondaryText = licor.description,
+                    imgUrl = licor.imgUrl,
+                    icon = Icons.Default.AddShoppingCart,
+                    overlineText = licor.origin,
+                    showDivider = true,
+                    price = licor.price
+                )
+            }
+            1 -> items(wines) { wine -> // Cuando se pulsa Vinos, pinta los elementos de getAllWine().
+                ItemList(
+                    modifier = Modifier.clickable { onSelectedItem(wine) }, // Mantiene el callback original de vinos.
+                    mainText = wine.name,
+                    secondaryText = wine.description,
+                    imgUrl = wine.imgUrl,
+                    icon = Icons.Default.AddShoppingCart,
+                    overlineText = wine.origin,
+                    showDivider = true,
+                    price = wine.price
+                )
             }
         }
     }
 }
-
+}

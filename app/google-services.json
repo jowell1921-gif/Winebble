@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "724265439810",
+    "project_id": "winebble-33b79",
+    "storage_bucket": "winebble-33b79.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:724265439810:android:8ae216e605d3041e0ad3db",
+        "android_client_info": {
+          "package_name": "com.example.winebble"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIkAj2dL1zFRqOBkNv4YNxON8_rUo_e4c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
