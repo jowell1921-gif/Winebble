@@ -32,8 +32,37 @@ class AuthViewModel(
     private fun loadCurrentUser() {
         val currentUserId = repository.getCurrentUserId()
         if (currentUserId != null) {
-            user = UserData(uid = currentUserId) // CAMBIO: RECUPERA LA SESION ABIERTA AL ENTRAR EN LA APP.
+            user = UserData(uid = currentUserId)
         }
+    }
+
+    private fun validateAuthFields(
+        name: String = "",
+        email: String,
+        password: String,
+        isRegisterMode: Boolean
+    ): Boolean {
+        if (isRegisterMode && name.trim().isEmpty()) {
+            errorMessage = "Debes introducir tu nombre"
+            return false
+        }
+
+        if (email.trim().isEmpty()) {
+            errorMessage = "Debes introducir tu correo"
+            return false
+        }
+
+        if (password.isBlank()) {
+            errorMessage = "Debes introducir tu contraseña"
+            return false
+        }
+
+        if (password.length < 6) {
+            errorMessage = "La contraseña debe tener al menos 6 caracteres"
+            return false
+        }
+
+        return true
     }
 
     fun register(
@@ -41,22 +70,26 @@ class AuthViewModel(
         email: String,
         password: String
     ) {
+
         viewModelScope.launch {
-            isLoading = true // CAMBIO: ACTIVA EL ESTADO DE CARGA MIENTRAS FIREBASE RESPONDE.
-            errorMessage = null // CAMBIO: LIMPIA EL ERROR ANTERIOR ANTES DE UN NUEVO REGISTRO.
-            successMessage = null // CAMBIO: LIMPIA EL MENSAJE DE EXITO ANTERIOR ANTES DE UN NUEVO REGISTRO.
+            if (!validateAuthFields(name = name, email = email, password = password, isRegisterMode = true)) {
+                return@launch
+            }
+            isLoading = true
+            errorMessage = null
+            successMessage = null
 
             try {
                 val result = repository.registerUser(name, email, password)
 
                 result.onSuccess { userData ->
-                    user = userData // CAMBIO: AL TENER USUARIO, MAINACTIVITY DEJA DE MOSTRAR LOGIN Y ENTRA EN LA APP.
-                    successMessage = "Usuario registrado correctamente" // CAMBIO: MUESTRA CONFIRMACION DE REGISTRO.
+                    user = userData
+                    successMessage = "Usuario registrado correctamente"
                 }.onFailure { exception ->
                     errorMessage = exception.message
                 }
             } finally {
-                isLoading = false // CAMBIO: GARANTIZA QUE EL BOTON Y EL INDICADOR DEJEN DE CARGAR INCLUSO SI ALGO FALLA.
+                isLoading = false
             }
         }
     }
@@ -66,21 +99,24 @@ class AuthViewModel(
         password: String
     ) {
         viewModelScope.launch {
-            isLoading = true // CAMBIO: ACTIVA EL ESTADO DE CARGA MIENTRAS FIREBASE RESPONDE.
-            errorMessage = null // CAMBIO: LIMPIA EL ERROR ANTERIOR ANTES DE UN NUEVO LOGIN.
-            successMessage = null // CAMBIO: LIMPIA EL MENSAJE DE EXITO ANTERIOR ANTES DE UN NUEVO LOGIN.
+            if (!validateAuthFields(email = email, password = password, isRegisterMode = false)) {
+                return@launch
+            }
+            isLoading = true
+            errorMessage = null
+            successMessage = null
 
             try {
                 val result = repository.loginUser(email, password)
 
                 result.onSuccess { userData ->
-                    user = userData // CAMBIO: AL TENER USUARIO, MAINACTIVITY ENTRA EN LA APP PRINCIPAL.
-                    successMessage = "Inicio de sesion correcto" // CAMBIO: MUESTRA CONFIRMACION DE LOGIN.
+                    user = userData
+                    successMessage = "Inicio de sesión correcto"
                 }.onFailure { exception ->
                     errorMessage = exception.message
                 }
             } finally {
-                isLoading = false // CAMBIO: GARANTIZA QUE EL ESTADO DE CARGA SIEMPRE TERMINE.
+                isLoading = false
             }
         }
     }
@@ -95,9 +131,9 @@ class AuthViewModel(
 
     fun logout() {
         repository.logout()
-        user = null // CAMBIO: ELIMINA EL USUARIO ACTUAL AL CERRAR SESION.
-        errorMessage = null // CAMBIO: LIMPIA ERRORES AL SALIR.
-        successMessage = null // CAMBIO: LIMPIA MENSAJES DE EXITO AL SALIR.
+        user = null
+        errorMessage = null
+        successMessage = null
     }
 
     fun getCurrentUserId(): String? {

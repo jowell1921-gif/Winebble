@@ -30,10 +30,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.winebble.Views.FavoritesScreen
-import com.example.winebble.Views.Profile
-import com.example.winebble.Views.Search
-import com.example.winebble.Views.UserLogin
+import com.example.winebble.data.model.CheckoutProduct
+import com.example.winebble.data.model.SearchCard
+import com.example.winebble.ui.screens.FavoritesScreen
+import com.example.winebble.ui.screens.MainScreen
+import com.example.winebble.ui.screens.ProductCheckoutDialog
+import com.example.winebble.ui.screens.Profile
+import com.example.winebble.ui.screens.Search
+import com.example.winebble.ui.screens.UserLogin
 import com.example.winebble.ui.theme.WinebbleTheme
 import com.example.winebble.viewmodel.AuthViewModel
 
@@ -53,13 +57,16 @@ class MainActivity : ComponentActivity() {
 fun ContentMain() {
     val context = LocalContext.current
     val authViewModel: AuthViewModel = viewModel()
-    val snackbarHostState = remember { SnackbarHostState() } // CAMBIO: CENTRALIZA LOS MENSAJES DE LOGIN, REGISTRO Y LOGOUT.
 
-    var selectedItem by remember { mutableStateOf(1) } // CAMBIO: CONTROLA LA PESTAÑA SELECCIONADA DE LA BARRA INFERIOR.
-    var logoutMessage by remember { mutableStateOf<String?>(null) } // CAMBIO: GUARDA EL MENSAJE TEMPORAL DE CIERRE DE SESION.
+    // <-- Estado principal / Main state -->
+    val snackbarHostState = remember { SnackbarHostState() }
+    var selectedItem by remember { mutableStateOf(1) }
+    var logoutMessage by remember { mutableStateOf<String?>(null) }
+    var selectedCheckoutProduct by remember { mutableStateOf<CheckoutProduct?>(null) }
 
-    val favoriteSearch = remember { mutableStateListOf<SearchCard>() } // CAMBIO: MANTIENE LOS FAVORITOS DE SEARCH COMPARTIDOS EN TODA LA APP.
-    val onToggleFavorite: (SearchCard) -> Unit = { card -> // CAMBIO: CENTRALIZA EN EL PADRE EL ALTA Y BAJA DE FAVORITOS.
+    // <-- Favoritos compartidos / Shared favorites -->
+    val favoriteSearch = remember { mutableStateListOf<SearchCard>() }
+    val onToggleFavorite: (SearchCard) -> Unit = { card ->
         val existingCard = favoriteSearch.firstOrNull { it.name == card.name }
         if (existingCard != null) {
             favoriteSearch.remove(existingCard)
@@ -68,14 +75,17 @@ fun ContentMain() {
         }
     }
 
-    LaunchedEffect(authViewModel.user, authViewModel.successMessage, logoutMessage) { // CAMBIO: MUESTRA SNACKBARS CUANDO CAMBIAN LOS EVENTOS DE AUTH.
+    // <-- Mensajes globales / Global messages -->
+    LaunchedEffect(authViewModel.user, authViewModel.successMessage, logoutMessage) {
         when {
             logoutMessage != null -> {
+                selectedItem = 1
                 snackbarHostState.showSnackbar(logoutMessage!!)
                 logoutMessage = null
             }
 
             authViewModel.user != null && authViewModel.successMessage != null -> {
+                selectedItem = 1
                 snackbarHostState.showSnackbar(authViewModel.successMessage!!)
                 authViewModel.clearSuccessMessage()
             }
@@ -88,12 +98,12 @@ fun ContentMain() {
             Color.White
         } else {
             Color(context.getColor(R.color.principal))
-        }, // CAMBIO: MANTIENE FONDO BLANCO EN LOGIN Y SEARCH, Y EL PRINCIPAL EN EL RESTO.
+        },
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) // CAMBIO: HOST GLOBAL PARA LOS MENSAJES DE AUTENTICACION.
+            SnackbarHost(hostState = snackbarHostState)
         },
         bottomBar = {
-            if (authViewModel.user != null) { // CAMBIO: SOLO MUESTRA LA BARRA INFERIOR CUANDO EL USUARIO YA ESTA DENTRO DE LA APP.
+            if (authViewModel.user != null) {
                 MyBottomBar(
                     selectedItem = selectedItem,
                     onItemSelected = { selectedItem = it }
@@ -105,7 +115,7 @@ fun ContentMain() {
             UserLogin(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues), // CAMBIO: MANTIENE EL LOGIN DENTRO DEL MISMO SCAFFOLD PARA COMPARTIR SNACKBARS.
+                    .padding(paddingValues),
                 authViewModel = authViewModel
             )
         } else {
@@ -114,28 +124,59 @@ fun ContentMain() {
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
+                // <-- Contenido principal / Main content -->
                 when (selectedItem) {
                     0 -> Search(
-                        favorites = favoriteSearch, // CAMBIO: PASA LA LISTA DE FAVORITOS A SEARCH.
-                        onToggleFavorite = onToggleFavorite // CAMBIO: PASA LA ACCION DE FAVORITOS A SEARCH.
+                        favorites = favoriteSearch,
+                        onToggleFavorite = onToggleFavorite
                     )
 
                     1 -> MainScreen(
                         modifier = Modifier.fillMaxSize(),
-                        onSelectedItem = { },
-                        onSelectedItemTwo = { }
+                        onSelectedItem = { wine ->
+                            selectedCheckoutProduct = CheckoutProduct(
+                                id = "wine-${wine.name}",
+                                name = wine.name,
+                                description = wine.description,
+                                origin = wine.origin,
+                                imageUrl = wine.imgUrl,
+                                price = wine.price,
+                                type = "Vino"
+                            )
+                        },
+                        onSelectedItemTwo = { licor ->
+                            selectedCheckoutProduct = CheckoutProduct(
+                                id = "licor-${licor.name}",
+                                name = licor.name,
+                                description = licor.description,
+                                origin = licor.origin,
+                                imageUrl = licor.imgUrl,
+                                price = licor.price,
+                                type = "Licor"
+                            )
+                        }
                     )
 
                     2 -> FavoritesScreen(
-                        favorites = favoriteSearch, // CAMBIO: PASA LOS FAVORITOS A FAVORITESSCREEN.
-                        onToggleFavorite = onToggleFavorite // CAMBIO: PERMITE QUITAR FAVORITOS TAMBIEN DESDE FAVORITESSCREEN.
+                        favorites = favoriteSearch,
+                        onToggleFavorite = onToggleFavorite
                     )
 
                     3 -> Profile(
+                        user = authViewModel.user,
                         onLogout = {
-                            logoutMessage = "Has cerrado sesión correctamente" // CAMBIO: PREPARA EL MENSAJE DE LOGOUT ANTES DE CERRAR SESION.
-                            authViewModel.logout() // CAMBIO: CIERRA SESION Y DEVUELVE AL LOGIN.
+                            selectedItem = 1
+                            logoutMessage = "Has cerrado sesión correctamente"
+                            authViewModel.logout()
                         }
+                    )
+                }
+
+                // <-- Checkout flotante / Floating checkout -->
+                selectedCheckoutProduct?.let { product ->
+                    ProductCheckoutDialog(
+                        product = product,
+                        onDismiss = { selectedCheckoutProduct = null }
                     )
                 }
             }
@@ -147,7 +188,7 @@ sealed class BottomBarScreen(val route: String, val icon: Int, val title: String
     object Search : BottomBarScreen("Search", R.drawable.icon_search, "Búsqueda")
     object Home : BottomBarScreen("Home", R.drawable.baseline_home_24, "Inicio")
     object Favorite : BottomBarScreen("Favorite", R.drawable.icon_favorite, "Favoritos")
-    object Profile : BottomBarScreen("Search", R.drawable.icon_person, "Perfil")
+    object Profile : BottomBarScreen("Profile", R.drawable.icon_person, "Perfil")
 }
 
 @Composable
@@ -196,6 +237,10 @@ data class BottomNavItem(@DrawableRes val icon: Int, val title: String)
 @Composable
 fun GreetingPreview() {
     WinebbleTheme {
-        ContentMain()
+        MainScreen(
+            modifier = Modifier.fillMaxSize(),
+            onSelectedItem = { },
+            onSelectedItemTwo = { }
+        )
     }
 }

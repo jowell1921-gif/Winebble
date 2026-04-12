@@ -5,9 +5,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException // CAMBIO: PERMITE DETECTAR EMAIL MAL FORMADO O PASSWORD INCORRECTA.
-import com.google.firebase.auth.FirebaseAuthInvalidUserException // CAMBIO: PERMITE DETECTAR USUARIO NO REGISTRADO O DESHABILITADO.
-import com.google.firebase.auth.FirebaseAuthUserCollisionException // CAMBIO: PERMITE DETECTAR SI EL CORREO YA ESTA REGISTRADO.
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import kotlinx.coroutines.TimeoutCancellationException
 
 class AuthRepository(
@@ -20,12 +20,12 @@ class AuthRepository(
         email: String,
         password: String
     ): Result<UserData> {
-        val cleanName = name.trim() // CAMBIO: LIMPIA ESPACIOS SOBRANTES EN EL NOMBRE.
-        val cleanEmail = email.trim() // CAMBIO: LIMPIA ESPACIOS SOBRANTES EN EL CORREO.
+        val cleanName = name.trim()
+        val cleanEmail = email.trim()
 
         return try {
-            val authResult = withTimeout(10_000) { auth.createUserWithEmailAndPassword(cleanEmail, password).await() } // CAMBIO: USA EL CORREO LIMPIO PARA REGISTRAR
-            val firebaseUser = authResult.user ?: throw Exception("No se pudo crear el usuario") // CAMBIO: VALIDA QUE FIREBASE HAYA DEVUELTO EL USUARIO.
+            val authResult = withTimeout(10_000) { auth.createUserWithEmailAndPassword(cleanEmail, password).await() }
+            val firebaseUser = authResult.user ?: throw Exception("No se pudo crear el usuario")
 
             val userData = UserData(
                 uid = firebaseUser.uid,
@@ -34,31 +34,30 @@ class AuthRepository(
             )
 
             try {
-                withTimeout(10_000) { // CAMBIO: LIMITA EL TIEMPO DE GUARDADO EN FIRESTORE PARA QUE LA UI NO SE QUEDE CARGANDO.
+                withTimeout(10_000) {
                     firestore.collection("users")
                         .document(firebaseUser.uid)
                         .set(userData)
                         .await()
                 }
             } catch (_: Exception) {
-                // CAMBIO: SI FALLA FIRESTORE, EL USUARIO YA EXISTE EN AUTH Y PUEDE ENTRAR EN LA APLICACION.
             }
 
             Result.success(userData)
         }
         catch (e: FirebaseAuthUserCollisionException) {
-        Result.failure(Exception("Este correo ya está registrado")) // CAMBIO: MUESTRA UN MENSAJE AMIGABLE SI EL EMAIL YA EXISTE.
+        Result.failure(Exception("Este correo ya está registrado"))
     }   catch (e: FirebaseAuthInvalidCredentialsException) {
-            val message = when (e.errorCode) { // CAMBIO: DISTINGUE MEJOR EL MOTIVO DEL FALLO EN EL REGISTRO.
-                "ERROR_INVALID_EMAIL" -> "El correo no tiene un formato válido" // CAMBIO: MENSAJE ESPECIFICO PARA EMAIL INCORRECTO.
-                "ERROR_WEAK_PASSWORD" -> "La contraseña debe tener al menos 6 caracteres" // CAMBIO: MENSAJE ESPECIFICO SI FIREBASE CONSIDERA LA PASSWORD DEMASIADO DEBIL.
-                else -> "No se pudo validar el registro" // CAMBIO: MENSAJE GENERAL LIMPIO PARA OTROS CASOS.
+            val message = when (e.errorCode) {
+                "ERROR_INVALID_EMAIL" -> "El correo no tiene un formato válido"
+                "ERROR_WEAK_PASSWORD" -> "La contraseña debe tener al menos 6 caracteres"
+                else -> "No se pudo validar el registro"
             }
             Result.failure(Exception(message))
     }   catch (e: TimeoutCancellationException) {
-        Result.failure(Exception("La conexión ha tardado demasiado. Inténtalo otra vez")) // CAMBIO: EVITA MOSTRAR UN ERROR TECNICO SI FIREBASE TARDA DEMASIADO.
+        Result.failure(Exception("La conexión ha tardado demasiado. Inténtalo otra vez"))
     }   catch (e: Exception) {
-        Result.failure(Exception("No se pudo completar el registro")) } // CAMBIO: SUSTITUYE EL ERROR TECNICO POR UNO MAS LIMPIO.
+        Result.failure(Exception("No se pudo completar el registro")) }
     }
 
     suspend fun loginUser(
@@ -68,10 +67,10 @@ class AuthRepository(
         val cleanEmail = email.trim()
 
         return try {
-            val authResult = withTimeout(10_000) { auth.signInWithEmailAndPassword(cleanEmail, password).await() } // CAMBIO: LIMITA EL TIEMPO DE ESPERA DEL LOGIN PARA EVITAR BLOQUEOS.
-            val firebaseUser = authResult.user ?: throw Exception("No se pudo iniciar sesion") // CAMBIO: VALIDA QUE FIREBASE HAYA DEVUELTO EL USUARIO.
+            val authResult = withTimeout(10_000) { auth.signInWithEmailAndPassword(cleanEmail, password).await() }
+            val firebaseUser = authResult.user ?: throw Exception("No se pudo iniciar sesión")
 
-            val document = withTimeout(10_000) { // CAMBIO: LIMITA EL TIEMPO DE LECTURA EN FIRESTORE.
+            val document = withTimeout(10_000) {
                 firestore.collection("users")
                     .document(firebaseUser.uid)
                     .get()
@@ -82,26 +81,26 @@ class AuthRepository(
                 ?: UserData(
                     uid = firebaseUser.uid,
                     email = firebaseUser.email ?: cleanEmail
-                ) // CAMBIO: SI NO EXISTE PERFIL EN FIRESTORE, CREA UN USUARIO BASICO CON LOS DATOS DE AUTH.
+                )
 
             Result.success(userData)
         }
         catch (e: FirebaseAuthInvalidUserException) {
-        Result.failure(Exception("No existe una cuenta con este correo")) // CAMBIO: INDICA QUE EL USUARIO NO ESTA REGISTRADO.
+        Result.failure(Exception("No existe una cuenta con este correo"))
 
     }   catch (e: FirebaseAuthInvalidCredentialsException) {
-        val message = when (e.errorCode) { // CAMBIO: REVISA EL CODIGO INTERNO DE FIREBASE PARA DAR UN MENSAJE MAS PRECISO.
-            "ERROR_INVALID_EMAIL" -> "El correo no tiene un formato válido" // CAMBIO: MENSAJE ESPECIFICO SI EL EMAIL ESTA MAL ESCRITO.
-            "ERROR_WRONG_PASSWORD" -> "La contraseña es incorrecta" // CAMBIO: MENSAJE ESPECIFICO SI LA PASSWORD NO COINCIDE.
-            else -> "Las credenciales no son válidas" // CAMBIO: MENSAJE GENERAL SI FIREBASE DEVUELVE OTRO CASO PARECIDO.
+        val message = when (e.errorCode) {
+            "ERROR_INVALID_EMAIL" -> "El correo no tiene un formato válido"
+            "ERROR_WRONG_PASSWORD" -> "La contraseña es incorrecta"
+            else -> "Las credenciales no son válidas"
         }
-        Result.failure(Exception(message)) // CAMBIO: DEVUELVE EL MENSAJE LIMPIO A LA UI.
+        Result.failure(Exception(message))
 
     }   catch (e: TimeoutCancellationException) {
-        Result.failure(Exception("La conexión ha tardado demasiado. Inténtalo otra vez")) // CAMBIO: EVITA MOSTRAR UN ERROR TECNICO SI FIREBASE TARDA DEMASIADO.
+        Result.failure(Exception("La conexión ha tardado demasiado. Inténtalo otra vez"))
 
     }   catch (e: Exception) {
-        Result.failure(Exception("No se pudo iniciar sesión")) } // CAMBIO: MENSAJE GENERAL LIMPIO PARA ERRORES NO CONTROLADOS.
+        Result.failure(Exception("No se pudo iniciar sesión")) }
     }
 
     fun logout() {

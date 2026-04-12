@@ -24,12 +24,18 @@ android {
     }
 
     buildTypes {
+        debug {
+            // URL para dispositivo físico real en la misma red WiFi
+            // Si usas el emulador de Android Studio, cámbiala a "http://10.0.2.2:4242"
+            buildConfigField("String", "STRIPE_BACKEND_URL", "\"http://10.13.37.12:4242\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "STRIPE_BACKEND_URL", "\"http://10.13.37.12:4242\"")
         }
     }
     compileOptions {
@@ -41,6 +47,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -66,6 +73,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.stripe.android)
 
 
     testImplementation(libs.junit)

@@ -23,4 +23,11 @@
     <string name="answer_account">¿Ya tienes cuenta?</string>
     <string name="not_account">¿No tienes cuenta?</string>
     <string name="letters_app">logo letras</string>
+    <string name="add_card">Añadir tarjeta de crédito</string>
+    <string name="edit_card">Editar tarjeta</string>
+    <string name="holder_card">Titular de la tarjeta</string>
+    <string name="number_credit_card">Número de tarjeta</string>
+    <string name="saved_change">Guardar cambios</string>
+    <string name="saved_card">Guardar tarjeta</string>
+    <string name="cancel">Cancelar</string>
 </resources>
